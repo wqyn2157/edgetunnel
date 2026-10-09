@@ -4,15 +4,30 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
+
+  workflow_run:
+    workflows:
+      - "Upstream Sync"
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
   deploy:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout latest main branch
         uses: actions/checkout@v6
+        with:
+          ref: main
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy . --project-name=lxy --branch=main
